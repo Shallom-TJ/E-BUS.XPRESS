@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  
+  <title>E-Bus Connect Uganda | Smart Transport. Connected Journeys.</title>
+  <meta name="description" content="Uganda's modern electric public transport prototype. Know your stop, wait with live driver signalling, track zero-emission buses in real-time, and travel with confidence across Kampala metropolitan corridors.">
+  <meta name="theme-color" content="#10B981">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="assets/images/logo.png">
+  <link rel="apple-touch-icon" href="assets/images/logo.png">
+
+  <!-- Leaflet CSS for Interactive Real-Time Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Application Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/map.css">
+  <link rel="stylesheet" href="css/views.css">
+</head>
+<body>
+
+  <!-- Skip to main content for screen readers (Section 24: Accessibility) -->
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+
+  <!-- ==========================================================================
+       PROTOTYPE TRANSPARENCY DISCLAIMER BANNER
+       ========================================================================== -->
+  <div class="prototype-disclaimer-banner" id="prototype-banner">
+    <div class="prototype-banner-content">
+      <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+        <span class="prototype-tag">Engineering Prototype</span>
+        <span>
+          <b>Notice:</b> E-Bus Connect Uganda is an academic &amp; technological demonstration platform designed around Uganda's electric transit transition. Not officially connected to Ugandan government or eBus authorities.
+        </span>
+      </div>
+      <button class="prototype-close-btn" id="close-proto-btn" title="Dismiss notice" aria-label="Dismiss prototype notice">✕</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       HEADER & NAVIGATION
+       ========================================================================== -->
+  <header class="site-header" role="banner">
+    <div class="container navbar">
+      
+      <!-- Brand Logo -->
+      <a href="#home" class="brand-link" data-target="home" aria-label="E-Bus Connect Uganda Home">
+        <img src="assets/images/logo.png" alt="E-Bus Connect Uganda Logo" class="brand-logo-img">
+        <div class="brand-text-wrap">
+          <div class="brand-name">
+            E-BUS <span class="highlight">CONNECT</span>
+          </div>
+          <span class="brand-uganda-badge">Uganda Metro • Electric</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Menu -->
+      <nav aria-label="Main Navigation">
+        <ul class="nav-menu">
+          <li><a href="#home" class="nav-link active" data-target="home">Home</a></li>
+          <li><a href="#find-bus" class="nav-link" data-target="find-bus">Passenger App</a></li>
+          <li><a href="#routes" class="nav-link" data-target="routes">Routes &amp; Stops</a></li>
+          <li><a href="#tracking" class="nav-link" data-target="tracking">Live Tracking</a></li>
+          <li><a href="#timetable" class="nav-link" data-target="timetable">Timetable</a></li>
+          <li><a href="#planner" class="nav-link" data-target="planner">Journey Planner</a></li>
+          <li><a href="#waiting" class="nav-link" data-target="waiting" style="color: var(--accent-gold); font-weight:700;">I'm Waiting</a></li>
+          <li><a href="#booking" class="nav-link" data-target="booking">Book Ride</a></li>
+          <li><a href="#payments" class="nav-link" data-target="payments">Payments</a></li>
+          <li><a href="#driver" class="nav-link" data-target="driver">Driver Portal</a></li>
+          <li><a href="#admin" class="nav-link" data-target="admin">Admin</a></li>
+        </ul>
+      </nav>
+
+      <!-- Quick Actions -->
+      <div class="nav-actions">
+        
+        <!-- PWA Install Button -->
+        <button id="pwa-install-btn" class="btn btn-outline btn-sm" style="display:none;" title="Install E-Bus App" aria-label="Install E-Bus App as PWA">
+          Install App
+        </button>
+
+        <!-- Role Switcher (Prototype Demo) -->
+        <button class="btn btn-outline btn-sm" onclick="RoleAccess.showRoleModal()" aria-label="Switch demo role (Prototype)" title="Switch Role (Prototype Demo)" style="font-size:0.78rem;">
+          Role
+        </button>
+
+        <!-- Theme Toggle Button -->
+        <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode" title="Toggle theme">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+
+        <!-- Notification Bell -->
+        <button class="notif-bell-btn" data-target="notifications" title="Service Alerts" aria-label="View service alerts">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="notif-badge-count" aria-label="7 alerts">7</span>
+        </button>
+
+        <!-- Mobile Drawer Hamburger Toggle -->
+        <button id="mobile-toggle-btn" class="mobile-toggle-btn" aria-label="Open Navigation Menu" aria-expanded="false">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-drawer-backdrop" id="mobile-drawer-backdrop" role="presentation"></div>
+  <aside class="mobile-drawer" id="mobile-drawer" aria-label="Mobile Navigation Menu">
+    <div class="mobile-drawer-header">
+      <div class="brand-name" style="font-size:1.15rem;">
+        E-BUS <span style="color:var(--primary)">CONNECT</span>
+      </div>
+      <button class="modal-close-btn" id="close-drawer-btn" aria-label="Close navigation menu">✕</button>
+    </div>
+    <ul class="mobile-drawer-links">
+      <li><a href="#home" class="nav-link" data-target="home">Home</a></li>
+      <li><a href="#find-bus" class="nav-link" data-target="find-bus">Passenger App</a></li>
+      <li><a href="#routes" class="nav-link" data-target="routes">Routes &amp; Stops</a></li>
+      <li><a href="#tracking" class="nav-link" data-target="tracking">Live Bus Tracking</a></li>
+      <li><a href="#timetable" class="nav-link" data-target="timetable">Timetable</a></li>
+      <li><a href="#planner" class="nav-link" data-target="planner">Journey Planner</a></li>
+      <li><a href="#journey-graph" class="nav-link" data-target="journey-graph">Journey Progress</a></li>
+      <li><a href="#waiting" class="nav-link" data-target="waiting" style="color:var(--accent-gold); font-weight:700;">I'm Waiting</a></li>
+      <li><a href="#booking" class="nav-link" data-target="booking">Book / Request Ride</a></li>
+      <li><a href="#payments" class="nav-link" data-target="payments">Payments (Demo)</a></li>
+      <li><a href="#eta" class="nav-link" data-target="eta">ETA Calculator</a></li>
+      <li><a href="#bus-rush" class="nav-link" data-target="bus-rush">Bus Rush Mini-Game</a></li>
+      <li><a href="#driver" class="nav-link" data-target="driver">Driver Portal</a></li>
+      <li><a href="#admin" class="nav-link" data-target="admin">Admin Dashboard</a></li>
+      <li><a href="#notifications" class="nav-link" data-target="notifications">Service Alerts</a></li>
+      <li><a href="#support" class="nav-link" data-target="support">Help &amp; Support</a></li>
+      <li><a href="#about" class="nav-link" data-target="about">About E-Bus Connect</a></li>
+      <li style="border-top:1px solid var(--border-subtle); margin-top:0.75rem; padding-top:0.75rem;">
+        <button class="btn btn-outline btn-sm" style="width:100%;" onclick="RoleAccess.showRoleModal(); App.closeMobileDrawer();" aria-label="Switch user role (prototype demo)">
+          Switch Role (Demo)
+        </button>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main View Container -->
+  <main id="main-content" role="main">
+
+    <!-- ======================================================================
+         VIEW 1: HOME PAGE
+         ====================================================================== -->
+    <section id="view-home" class="view-panel">
+      
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <div class="hero-bg-overlay" aria-hidden="true"></div>
+        <img src="assets/images/hero-bus.jpg" alt="Kampala Electric Bus on city road" class="hero-bg-image">
+
+        <div class="container hero-content-grid">
+          <div>
+            <div class="hero-badge-live" aria-label="Live service indicator">
+              <span class="pulse-indicator" aria-hidden="true"></span>
+              KAMPALA METRO ELECTRIC MOBILITY
+            </div>
+            
+            <h1 class="hero-title">
+              Smart Transport. <br>
+              <span class="gradient-text">Connected Journeys.</span>
+            </h1>
+
+            <p class="hero-subtitle">
+              Find your bus, know your stop, track your journey and travel with confidence across Uganda's clean electric transit network.
+            </p>
+
+            <div class="hero-cta-group">
+              <button class="btn btn-primary btn-lg" data-target="find-bus" aria-label="Find a bus now">
+                Find a Bus
+              </button>
+              <button class="btn btn-secondary btn-lg" data-target="tracking" aria-label="Track a bus live on map">
+                Track a Bus Live
+              </button>
+              <button class="btn btn-outline btn-lg" data-target="routes" aria-label="View all routes">
+                View Routes
+              </button>
+            </div>
+
+            <!-- Impact Statistics -->
+            <div class="hero-stats-row">
+              <div class="hero-stat-item">
+                <h4>100<span>%</span></h4>
+                <p>Electric &amp; Zero Tailpipe Emissions</p>
+              </div>
+              <div class="hero-stat-item">
+                <h4>6<span> Lines</span></h4>
+                <p>Kampala &amp; Greater Metropolitan</p>
+              </div>
+              <div class="hero-stat-item">
+                <h4>18<span> Stops</span></h4>
+                <p>Designated Smart Solar Stages</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Bus Finder Widget -->
+          <div class="hero-quick-finder" aria-label="Quick bus finder">
+            <div class="card card-glass" style="padding: 1.5rem;">
+              <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-main);">
+                Quick Journey Search
+              </h3>
+              <div class="form-group">
+                <label class="form-label" for="hero-from">Your Location</label>
+                <select id="hero-from" class="form-control" aria-label="Select your starting location">
+                  <option value="">Select location...</option>
+                  <option value="Chanja">Chanja</option>
+                  <option value="Kyanja">Kyanja</option>
+                  <option value="Ntinda">Ntinda</option>
+                  <option value="Bukoto">Bukoto</option>
+                  <option value="Kisementi">Kisementi</option>
+                  <option value="Nakawa">Nakawa</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="hero-to">Destination</label>
+                <select id="hero-to" class="form-control" aria-label="Select your destination">
+                  <option value="">Select destination...</option>
+                  <option value="City Centre">City Centre (CBD)</option>
+                  <option value="Kisementi">Kisementi</option>
+                  <option value="Nakawa">Nakawa</option>
+                  <option value="Ntinda">Ntinda</option>
+                  <option value="Entebbe">Entebbe Airport</option>
+                  <option value="Mukono">Mukono</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" style="width:100%;" onclick="App.navigateTo('planner')" aria-label="Plan my journey">
+                Plan My Journey
+              </button>
+              <div style="margin-top: 0.85rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-outline btn-sm" data-target="waiting" aria-label="I am waiting at a bus stop">I'm Waiting</button>
+                <button class="btn btn-outline btn-sm" data-target="tracking" aria-label="Track bus on map">Track Bus</button>
+                <button class="btn btn-outline btn-sm" data-target="booking" aria-label="Book a seat">Book Seat</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KNOW → WAIT → TRACK → TRAVEL Pillars -->
+      <div class="section" style="padding: 4rem 0;">
+        <div class="container">
+          <div class="section-header" style="text-align: center; align-items: center;">
+            <div class="section-kicker">How It Works</div>
+            <h2 class="section-title">KNOW → WAIT → TRACK → TRAVEL</h2>
+            <p class="section-desc" style="max-width: 620px;">The complete electric bus journey experience in four simple steps. From knowing your route to arriving at your destination.</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
+            <div class="pillar-card" onclick="App.navigateTo('find-bus')" role="button" tabindex="0" aria-label="Know — Find your route">
+              <div class="pillar-icon-box" style="background: rgba(16,185,129,0.12); color: var(--primary); font-weight: 800; font-size: 1.15rem;">01</div>
+              <h3 class="pillar-title">KNOW</h3>
+              <p class="pillar-desc">Find your nearest stop, check available routes, and understand which bus serves your corridor.</p>
+            </div>
+            <div class="pillar-card" onclick="App.navigateTo('waiting')" role="button" tabindex="0" aria-label="Wait — Signal your stop">
+              <div class="pillar-icon-box" style="background: var(--accent-gold-soft); color: var(--accent-gold); font-weight: 800; font-size: 1.15rem;">02</div>
+              <h3 class="pillar-title">WAIT</h3>
+              <p class="pillar-desc">Signal to the driver you are waiting. Your aggregated count reaches the driver's in-cab tablet instantly.</p>
+            </div>
+            <div class="pillar-card" onclick="App.navigateTo('tracking')" role="button" tabindex="0" aria-label="Track — Follow your bus live">
+              <div class="pillar-icon-box" style="background: rgba(56,189,248,0.12); color: #38BDF8; font-weight: 800; font-size: 1.15rem;">03</div>
+              <h3 class="pillar-title">TRACK</h3>
+              <p class="pillar-desc">Watch your bus move in real-time on the live map. Know when it leaves each stop and exactly when it arrives.</p>
+            </div>
+            <div class="pillar-card" onclick="App.navigateTo('booking')" role="button" tabindex="0" aria-label="Travel — Book and board">
+              <div class="pillar-icon-box" style="background: rgba(139,92,246,0.12); color: #A78BFA; font-weight: 800; font-size: 1.15rem;">04</div>
+              <h3 class="pillar-title">TRAVEL</h3>
+              <p class="pillar-desc">Board your bus, scan your QR code, and enjoy a clean zero-emission journey across Kampala and beyond.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION 28: INTERACTIVE USER EXPERIENCE JOURNEY (11 STEPS)
+           ============================================================ -->
+      <div class="section" style="padding: 3rem 0; background: rgba(255,255,255,0.02); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+        <div class="container">
+          <div class="section-header" style="text-align: center; align-items: center;">
+            <div class="section-kicker">Complete Passenger Experience</div>
+            <h2 class="section-title">The End-to-End Commuter Journey</h2>
+            <p class="section-desc" style="max-width: 660px;">
+              A seamless transit lifecycle designed specifically for Kampala's high-density corridors. Click any step to navigate.
+            </p>
+          </div>
+
+          <div class="ux-journey-track" role="region" aria-label="11-step passenger experience flow">
+            <div class="ux-step-card" onclick="App.navigateTo('find-bus')">
+              <span class="ux-step-num">1</span>
+              <div class="ux-step-icon" style="font-size:0.9rem; font-weight:800; color:var(--primary);">PWA</div>
+              <div class="ux-step-title">Open App</div>
+              <div class="ux-step-desc">Instant PWA or web portal access</div>
+            </div>
+            <div class="ux-step-card" onclick="App.navigateTo('planner')">
+              <span class="ux-step-num">2</span>
+              <div class="ux-step-icon" style="font-size:0.9rem; font-weight:800; color:var(--accent-cyan);">DEST</div>
+              <div class="ux-step-title">Choose Destination</div>
+              <div class="ux-step-desc">Select City Centre, Nakawa, Entebbe</div>
+            </div>
+            <div class="ux-step-card" onclick="App.navigateTo('find-bus')">
+              <span class="ux-step-num">3</span>
+              <div class="ux-step-icon" style="font-size:0.9rem; font-weight:800; color:var(--primary-light);">STOP</div>
+              <div class="ux-step-title">Find Nearest Stop</div>
+              <div class="ux-step-desc">GPS shows stages within walking distance</div>
+            </div>
+            <div class="ux-step-card" onclick="App.navigateTo('find-bus')">
+              <span class="ux-step-num">4</span>
+              <div class="ux-step-icon" style="font-size:0.9rem; font-weight:800; color:var(--accent-gold);">FLEET</div>
+              <div class="ux-step-title">View Bus</div>
+              <div class="ux-step-desc">Check Bus 04, seats &amp; battery</div>
+            </div>
+            <div class="ux-step-card" onclick="App.navigateTo('tracking')">
+              <span class="ux-step-num">5</span>
+              <div class="ux-step-icon" style="font-size:0.9rem; font-weight:800; color:#38BDF8;">GPS</div>
+              <div class="ux-step-title">See Bus Location</div>
+              <div class="ux-step-desc">Follow live telemetry marker</div>
+            </div>
+            <div class="ux-step-card" onclick="App.navigateTo('eta')">
+              <span class="ux-step-num">6</span>
+              <div class="ux-step-icon" style="font-size:0.9rem; font-weight:800; color:var(--accent-gold);">ETA</div>
+              <div class="ux-step-title">See ETA</div>
+              <div class="ux-step-desc">Live arrival countdown (e.g. 8 mins)</div>
+            </div>
+            <div class="ux-step-card active" onclick="App.navigateTo('waiting')" style="border-color: var(--accent-gold);">
+              <span class="ux-step-num" style="background:var(--accent-gold-soft); color:var(--accent-gold);">7</span>
+              <div class="ux-step-icon" style="font-size:0.9rem; font-weight:800; color:var(--accent-gold);">SIGNAL</div>
+              <div class="ux-step-title" style="color:var(--accent-gold);">"I'm Waiting"</div>
+              <div class="ux-step-desc">Signal in-cab driver tablet</div>
+            </div>
+            <div class="ux-step-card" onclick="App.navigateTo('notifications')">
+              <span class="ux-step-num">8</span>
+              <div class="ux-step-icon" style="font-size:0.9rem; font-weight:800; color:var(--accent-cyan);">ALERT</div>
+              <div class="ux-step-title">Arrival Alert</div>
+              <div class="ux-step-desc">Push chime when bus is 2 mins away</div>
+            </div>
+            <div class="ux-step-card" onclick="App.navigateTo('booking')">
+              <span class="ux-step-num">9</span>
+              <div class="ux-step-icon" style="font-size:0.9rem; font-weight:800; color:#A78BFA;">PASS</div>
+              <div class="ux-step-title">Board Bus</div>
+              <div class="ux-step-desc">Scan QR ticket &amp; step onboard</div>
+            </div>
+            <div class="ux-step-card" onclick="App.navigateTo('journey-graph')">
+              <span class="ux-step-num">10</span>
+              <div class="ux-step-icon" style="font-size:0.9rem; font-weight:800; color:var(--primary);">LIVE</div>
+              <div class="ux-step-title">Track Journey</div>
+              <div class="ux-step-desc">Live progress along stops</div>
+            </div>
+            <div class="ux-step-card" onclick="App.navigateTo('home')">
+              <span class="ux-step-num">11</span>
+              <div class="ux-step-icon" style="font-size:0.9rem; font-weight:800; color:var(--primary-light);">GOAL</div>
+              <div class="ux-step-title">Arrive Safely</div>
+              <div class="ux-step-desc">Zero emissions, zero hassle</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION 27: PASSENGER VS OPERATOR BENEFITS
+           ============================================================ -->
+      <div class="section" style="padding: 4rem 0;">
+        <div class="container">
+          <div class="section-header" style="text-align: center; align-items: center;">
+            <div class="section-kicker">Transforming Kampala Transit</div>
+            <h2 class="section-title">Designed for Commuters &amp; Fleet Operators</h2>
+            <p class="section-desc" style="max-width: 640px;">
+              Bridging the information gap between waiting passengers on the street and electric transit dispatchers.
+            </p>
+          </div>
+
+          <div class="benefits-grid">
+            
+            <!-- Passenger Benefits Card -->
+            <div class="benefit-card passenger">
+              <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:46px; height:46px; border-radius:50%; background:rgba(16,185,129,0.15); display:flex; align-items:center; justify-content:center; font-weight:800; color:var(--primary); font-size:1.1rem;">
+                  PAX
+                </div>
+                <div>
+                  <h3 style="font-size:1.3rem; margin-bottom:0.2rem;">For Kampala Commuters</h3>
+                  <span class="badge badge-electric">Convenience &amp; Certainty</span>
+                </div>
+              </div>
+              <p style="font-size:0.88rem; color:var(--text-muted);">
+                Eliminates unpredictable stage waiting times and gives passengers total visibility over their daily commute.
+              </p>
+              <ul class="benefit-list">
+                <li><span class="benefit-check">✓</span> <b>Never Miss a Bus:</b> Live GPS simulation and stop countdowns tell you exactly when to leave home or office.</li>
+                <li><span class="benefit-check">✓</span> <b>Signal Approaching Drivers:</b> The "I'm Waiting" beacon prevents buses from driving past full or empty stages.</li>
+                <li><span class="benefit-check">✓</span> <b>Cashless QR Ticketing:</b> Seamless simulated Mobile Money (MTN / Airtel) ticketing with instant digital boarding passes.</li>
+                <li><span class="benefit-check">✓</span> <b>Clean, Quiet Travel:</b> Track zero tailpipe emission buses that reduce Kampala's urban air pollution.</li>
+                <li><span class="benefit-check">✓</span> <b>Universal Accessibility:</b> Works on any smartphone browser, low-bandwidth networks, and screen readers.</li>
+              </ul>
+            </div>
+
+            <!-- Operator Benefits Card -->
+            <div class="benefit-card operator">
+              <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <div style="width:46px; height:46px; border-radius:50%; background:rgba(245,158,11,0.15); display:flex; align-items:center; justify-content:center; font-weight:800; color:var(--accent-gold); font-size:1.1rem;">
+                  OPS
+                </div>
+                <div>
+                  <h3 style="font-size:1.3rem; margin-bottom:0.2rem;">For Transport Operators &amp; KCCA</h3>
+                  <span class="badge badge-warning">Efficiency &amp; Data-Driven Control</span>
+                </div>
+              </div>
+              <p style="font-size:0.88rem; color:var(--text-muted);">
+                Provides centralized telematics and real-time passenger crowd analytics to optimize bus scheduling.
+              </p>
+              <ul class="benefit-list">
+                <li><span class="benefit-check">✓</span> <b>Demand Heatmap:</b> Real-time visualization of queue sizes at all 18 stages to prevent bottlenecks.</li>
+                <li><span class="benefit-check">✓</span> <b>Dynamic Relief Dispatch:</b> Deploy standby electric coaches dynamically to overwhelmed corridors.</li>
+                <li><span class="benefit-check">✓</span> <b>Battery &amp; SoC Telemetry:</b> Monitor electric battery percentage and schedule charging at Bweyogerere hub.</li>
+                <li><span class="benefit-check">✓</span> <b>Distraction-Free Driver Tablet:</b> High-contrast in-cab interface showing waiting commuters ahead.</li>
+                <li><span class="benefit-check">✓</span> <b>Open Transport Data (GTFS):</b> Structured data ready to plug into municipal transit databases and GPS trackers.</li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION 27: FUTURE PAYMENTS ECOSYSTEM
+           ============================================================ -->
+      <div class="section" style="padding: 3.5rem 0; background: rgba(255,255,255,0.015); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+        <div class="container">
+          <div class="section-header" style="text-align: center; align-items: center;">
+            <div class="section-kicker">Integrated Fare Collection</div>
+            <h2 class="section-title">Future Payments Architecture</h2>
+            <p class="section-desc" style="max-width: 620px;">
+              Designed to connect directly into Uganda's leading mobile financial and cashless transit ecosystems.
+            </p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
+            <div class="card card-glass" style="text-align:center; padding: 1.5rem;">
+              <div style="font-size: 1.1rem; font-weight: 800; color: #F59E0B; margin-bottom: 0.5rem; letter-spacing: 0.05em;">MTN MoMo</div>
+              <h4 style="font-size: 1.1rem; margin-bottom: 0.35rem; color: #F59E0B;">MTN Mobile Money</h4>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+                USSD push prompt (*165#) and Open API integration for instant automatic fare ticketing.
+              </p>
+              <span class="badge badge-warning">Simulated in Demo</span>
+            </div>
+            <div class="card card-glass" style="text-align:center; padding: 1.5rem;">
+              <div style="font-size: 1.1rem; font-weight: 800; color: #EF4444; margin-bottom: 0.5rem; letter-spacing: 0.05em;">AIRTEL</div>
+              <h4 style="font-size: 1.1rem; margin-bottom: 0.35rem; color: #EF4444;">Airtel Money</h4>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Seamless merchant push authorization (*185#) across all metropolitan routes.
+              </p>
+              <span class="badge badge-danger">Simulated in Demo</span>
+            </div>
+            <div class="card card-glass" style="text-align:center; padding: 1.5rem;">
+              <div style="font-size: 1.1rem; font-weight: 800; color: #38BDF8; margin-bottom: 0.5rem; letter-spacing: 0.05em;">NFC SMART CARD</div>
+              <h4 style="font-size: 1.1rem; margin-bottom: 0.35rem; color: #38BDF8;">Transit Smart Cards</h4>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Contactless NFC tap-to-pay cards (KaCyber &amp; municipal transit smart passes).
+              </p>
+              <span class="badge badge-info">Future Integration</span>
+            </div>
+            <div class="card card-glass" style="text-align:center; padding: 1.5rem;">
+              <div style="font-size: 1.1rem; font-weight: 800; color: #A78BFA; margin-bottom: 0.5rem; letter-spacing: 0.05em;">VISA / MASTERCARD</div>
+              <h4 style="font-size: 1.1rem; margin-bottom: 0.35rem; color: #A78BFA;">Contactless Bank Cards</h4>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+                EMV contactless bank card ticketing for international travelers and airport express lines.
+              </p>
+              <span class="badge badge-info">Future Integration</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION 32: FUTURE SYSTEM ARCHITECTURE (DATA FLOW)
+           ============================================================ -->
+      <div class="section" style="padding: 4rem 0;">
+        <div class="container">
+          <div class="section-header" style="text-align: center; align-items: center;">
+            <div class="section-kicker">Software Engineering Architecture</div>
+            <h2 class="section-title">Future Connected Transit Architecture</h2>
+            <p class="section-desc" style="max-width: 660px;">
+              Designed with loose coupling and standardized interfaces so real GPS hardware, databases, and government APIs can plug in smoothly.
+            </p>
+          </div>
+
+          <div class="arch-diagram-wrap">
+            <h4 style="text-align:center; color:var(--primary); font-size:1.15rem; margin-bottom:1.5rem;">
+              Two-Way Real-Time Transit Data Flow
+            </h4>
+
+            <div class="arch-grid">
+              <div class="arch-node">
+                <div style="font-size:1rem; font-weight:800; color:var(--primary); margin-bottom:0.35rem;">APP</div>
+                <div class="arch-node-title">Passenger App</div>
+                <div class="arch-node-sub">Web / PWA / Mobile</div>
+              </div>
+
+              <div class="arch-connector">⇄</div>
+
+              <div class="arch-node core">
+                <div style="font-size:1rem; font-weight:800; color:var(--accent-gold); margin-bottom:0.35rem;">API</div>
+                <div class="arch-node-title">Backend API</div>
+                <div class="arch-node-sub">Node.js / Python REST &amp; WebSockets</div>
+              </div>
+
+              <div class="arch-connector">⇄</div>
+
+              <div class="arch-node">
+                <div style="font-size:1rem; font-weight:800; color:#38BDF8; margin-bottom:0.35rem;">DATA</div>
+                <div class="arch-node-title">Database &amp; Cache</div>
+                <div class="arch-node-sub">PostgreSQL + Redis Pub/Sub</div>
+              </div>
+
+              <div class="arch-connector">⇄</div>
+
+              <div class="arch-node">
+                <div style="font-size:1rem; font-weight:800; color:var(--accent-cyan); margin-bottom:0.35rem;">CAB</div>
+                <div class="arch-node-title">Driver In-Cab Tablet</div>
+                <div class="arch-node-sub">Touch Cockpit &amp; Stage Signals</div>
+              </div>
+
+              <div class="arch-connector">⇄</div>
+
+              <div class="arch-node">
+                <div style="font-size:1rem; font-weight:800; color:#34D399; margin-bottom:0.35rem;">GPS</div>
+                <div class="arch-node-title">Bus GPS / IoT Telematics</div>
+                <div class="arch-node-sub">Vehicle Tracker / CAN-bus</div>
+              </div>
+            </div>
+
+            <!-- External Integrations Row -->
+            <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed var(--border-subtle);">
+              <div style="font-size:0.85rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; text-align:center; margin-bottom:1rem;">
+                External Integration Connectors
+              </div>
+              <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+                <span class="badge badge-info">Leaflet / OpenStreetMap / Google Maps</span>
+                <span class="badge badge-warning">MTN / Airtel MoMo USSD Gateway</span>
+                <span class="badge badge-electric">Web Push &amp; SMS Dispatch</span>
+                <span class="badge badge-info">KCCA Metropolitan Transit API</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION 33: DEVELOPMENT PHASES & ROADMAP
+           ============================================================ -->
+      <div class="section" style="padding: 3.5rem 0; background: rgba(255,255,255,0.02); border-top: 1px solid var(--border-subtle);">
+        <div class="container">
+          <div class="section-header" style="text-align: center; align-items: center;">
+            <div class="section-kicker">Project Evolution</div>
+            <h2 class="section-title">Engineering Development Roadmap</h2>
+            <p class="section-desc" style="max-width: 640px;">
+              Phased development lifecycle from initial working prototype to production metropolitan deployment.
+            </p>
+          </div>
+
+          <div class="roadmap-grid">
+            <div class="roadmap-card active-phase">
+              <span class="roadmap-phase-tag">Phase 1: Active Prototype</span>
+              <h4 style="font-size:1.1rem; color:var(--text-main);">Working Prototype</h4>
+              <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">
+                Completed core software architecture and client-side simulation.
+              </p>
+              <ul class="roadmap-items">
+                <li><span class="benefit-check" style="color:var(--primary); font-weight:bold;">✓</span> Single-Page App &amp; Leaflet Map</li>
+                <li><span class="benefit-check" style="color:var(--primary); font-weight:bold;">✓</span> KNOW → WAIT → TRACK → TRAVEL</li>
+                <li><span class="benefit-check" style="color:var(--primary); font-weight:bold;">✓</span> Driver Tablet &amp; Waiting Counter</li>
+                <li><span class="benefit-check" style="color:var(--primary); font-weight:bold;">✓</span> Admin Heatmap &amp; CSV Export</li>
+                <li><span class="benefit-check" style="color:var(--primary); font-weight:bold;">✓</span> MoMo Simulation &amp; QR Pass</li>
+                <li><span class="benefit-check" style="color:var(--primary); font-weight:bold;">✓</span> Offline PWA Service Worker</li>
+              </ul>
+            </div>
+
+            <div class="roadmap-card future-phase">
+              <span class="roadmap-phase-tag">Phase 2: Planned</span>
+              <h4 style="font-size:1.1rem; color:var(--text-main);">Cloud Database &amp; Auth</h4>
+              <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">
+                Multi-tenant cloud persistence and operator authentication.
+              </p>
+              <ul class="roadmap-items">
+                <li><span style="color:var(--text-dim); font-size:0.8rem;">○</span> PostgreSQL &amp; Redis Backend</li>
+                <li><span style="color:var(--text-dim); font-size:0.8rem;">○</span> Driver &amp; Admin JWT Login</li>
+                <li><span style="color:var(--text-dim); font-size:0.8rem;">○</span> Real-time GTFS Transit Feed</li>
+                <li><span style="color:var(--text-dim); font-size:0.8rem;">○</span> User Profile &amp; Ride History</li>
+              </ul>
+            </div>
+
+            <div class="roadmap-card future-phase">
+              <span class="roadmap-phase-tag">Phase 3: Planned</span>
+              <h4 style="font-size:1.1rem; color:var(--text-main);">Hardware GPS &amp; Telematics</h4>
+              <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">
+                Integration with live vehicle GPS devices and charging hubs.
+              </p>
+              <ul class="roadmap-items">
+                <li><span style="color:var(--text-dim); font-size:0.8rem;">○</span> 4G/5G Vehicle GPS Trackers</li>
+                <li><span style="color:var(--text-dim); font-size:0.8rem;">○</span> WebSocket Telemetry Stream</li>
+                <li><span style="color:var(--text-dim); font-size:0.8rem;">○</span> Traffic-Aware ETA Machine Learning</li>
+                <li><span style="color:var(--text-dim); font-size:0.8rem;">○</span> Kiira Motors Battery Telemetry</li>
+              </ul>
+            </div>
+
+            <div class="roadmap-card future-phase">
+              <span class="roadmap-phase-tag">Phase 4: Production</span>
+              <h4 style="font-size:1.1rem; color:var(--text-main);">Metropolitan Scale</h4>
+              <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">
+                Citywide deployment with official partner integration.
+              </p>
+              <ul class="roadmap-items">
+                <li><span style="color:var(--text-dim); font-size:0.8rem;">○</span> Real MTN/Airtel MoMo API</li>
+                <li><span style="color:var(--text-dim); font-size:0.8rem;">○</span> KCCA Municipal Integration</li>
+                <li><span style="color:var(--text-dim); font-size:0.8rem;">○</span> Security Hardening &amp; ISO Compliance</li>
+                <li><span style="color:var(--text-dim); font-size:0.8rem;">○</span> Solar Stage Smart LED Displays</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION 27: STAKEHOLDER FEEDBACK & CONTACT
+           ============================================================ -->
+      <div class="section" style="padding: 4rem 0;">
+        <div class="container container-narrow">
+          <div class="card card-glass" style="padding: 2.5rem 2rem;">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+              <div class="section-kicker">Academic Software Prototype</div>
+              <h3 style="font-size: 1.6rem; margin-bottom: 0.5rem;">Demonstration &amp; Stakeholder Feedback</h3>
+              <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+                Developed as an undergraduate Software Engineering prototype. We invite feedback from lecturers, transport operators, and technology partners.
+              </p>
+            </div>
+
+            <form onsubmit="event.preventDefault(); App.showToast('Feedback Received', 'Thank you! Your feedback has been recorded in the prototype demo log.', 'success'); this.reset();">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="feedback-name">Your Name</label>
+                  <input type="text" id="feedback-name" class="form-control" placeholder="e.g. Dr. Okot / Transport Planner" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="feedback-role">Stakeholder Category</label>
+                  <select id="feedback-role" class="form-control">
+                    <option value="Academic / Lecturer">University Lecturer / Reviewer</option>
+                    <option value="Transport Operator">Bus Operator / Transit Staff</option>
+                    <option value="Government / KCCA">Municipal / KCCA Official</option>
+                    <option value="Passenger">Commuter / Student</option>
+                    <option value="Technology Partner">Software Engineer / Partner</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label" for="feedback-message">Observations &amp; Suggestions</label>
+                <textarea id="feedback-message" class="form-control" rows="3" placeholder="Share your feedback regarding the KNOW → WAIT → TRACK → TRAVEL flow, telematics, or UI design..." required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.05rem;">
+                Submit Demonstration Feedback
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ======================================================================
+         VIEW 2: PASSENGER APP — FIND A BUS (SECTION 5)
+         ====================================================================== -->
+    <section id="view-find-bus" class="view-panel section" style="display: none;">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker">Live Fleet Status</div>
+          <h2 class="section-title">Find a Bus</h2>
+          <p class="section-desc">Search for your destination, route, or bus number. View available buses, live location, and estimated arrival time.</p>
+        </div>
+
+        <!-- Search & Geolocation Bar -->
+        <div class="card card-glass" style="margin-bottom: 1.5rem;">
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1rem;">
+            <div style="flex: 2; min-width: 220px;">
+              <label class="form-label" for="search-filter-input">Search Buses, Stops, or Routes</label>
+              <input type="text" id="search-filter-input" class="form-control" 
+                placeholder="e.g. Ntinda, Kisementi, BUS 04, City Centre..." 
+                oninput="App.handleFindBusSearch()"
+                aria-label="Search buses, stops, or routes">
+            </div>
+            <div style="flex: 1; min-width: 160px;">
+              <label class="form-label" for="search-route-filter">Corridor Filter</label>
+              <select id="search-route-filter" class="form-control" onchange="App.handleFindBusSearch()" aria-label="Filter by route corridor">
+                <option value="all">All Corridors</option>
+              </select>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-primary" onclick="App.handleFindBusSearch()" aria-label="Search for buses">
+                Search
+              </button>
+              <button class="btn btn-secondary" onclick="App.handleGeolocationRequest()" id="geo-btn" aria-label="Use my current location">
+                My Location
+              </button>
+            </div>
+          </div>
+          <div id="geo-status-indicator" style="font-size: 0.78rem; color: var(--text-muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;" aria-live="polite">
+            <span>Current location: <b>Chanja</b> (Approx. 2.4 km from BUS 04)</span>
+            <span style="color:var(--primary); font-weight:600;">6 Active Zero-Emission Buses on Line</span>
+          </div>
+        </div>
+
+        <!-- Bus Cards Container -->
+        <div id="find-bus-results">
+          <!-- Populated by App.renderPassengerBuses() -->
+        </div>
+
+        <!-- Nearby Stops -->
+        <div style="margin-top: 2rem;">
+          <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">Nearby Bus Stops</h3>
+          <div id="nearby-stops-container" class="grid-2">
+            <!-- Populated by App.renderNearbyStops() -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 3: ROUTES & STOPS DIRECTORY (SECTION 15)
+         ====================================================================== -->
+    <section id="view-routes" class="view-panel section" style="display: none;">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker">Route Directory</div>
+          <h2 class="section-title">Routes &amp; Bus Stops</h2>
+          <p class="section-desc">Complete directory of electric bus routes serving Kampala and surrounding areas. Each route shows stops, operating status, and available buses.</p>
+        </div>
+
+        <!-- Prototype Notice -->
+        <div style="display:flex; align-items:center; gap:0.65rem; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:var(--radius-md); padding:0.85rem 1rem; margin-bottom:1.5rem;" role="note">
+          <span class="badge badge-warning" style="font-size:0.7rem;">PROTOTYPE</span>
+          <span style="font-size:0.82rem; color:var(--accent-gold);"><b>PROTOTYPE DATA:</b> These routes and stops are for demonstration purposes only.</span>
+        </div>
+
+        <div id="routes-list-container" class="grid-2">
+          <!-- Populated by App.renderRoutesList() -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 4: LIVE BUS TRACKING & MAP (SECTIONS 6, 7, 8)
+         ====================================================================== -->
+    <section id="view-tracking" class="view-panel section" style="display: none; padding-top: 2rem;">
+      <div class="container">
+        
+        <!-- Live Distance to Selected Bus Banner (Section 8) -->
+        <div id="proximity-distance-banner" class="proximity-distance-banner" aria-live="polite">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+              <b>Passenger: Chanja</b> ➔ <b>Tracking: BUS 04 (Ntinda → City Centre)</b>
+            </div>
+            <div style="color: var(--primary); font-weight: 800;">
+              You are approximately 2.4 km from the selected bus. Estimated arrival: 8 minutes.
+            </div>
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-bottom: 1.25rem;">
+          <div class="section-kicker">Simulated Live GPS Tracking</div>
+          <h2 class="section-title">Kampala Electric Transit Live Map</h2>
+          <p class="section-desc">
+            Simulated live bus movement through <b>Ntinda → Bukoto → Kisementi → City Centre</b>. Click markers for telematics.
+          </p>
+        </div>
+
+        <div class="map-container-wrapper">
+          <!-- Floating Overlay Controls -->
+          <div class="map-floating-overlay">
+            <div class="map-glass-card">
+              <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.4rem;">
+                <span class="pulse-indicator" aria-hidden="true"></span> Live GPS Fleet Telemetry
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+                <span class="badge badge-electric" style="font-size:0.68rem; padding:0.15rem 0.45rem;">On Time</span>
+                <span class="badge badge-warning" style="font-size:0.68rem; padding:0.15rem 0.45rem;">Delayed</span>
+                <span class="badge badge-danger" style="font-size:0.68rem; padding:0.15rem 0.45rem;">Out of Service</span><br>
+                Blue pulsing pin indicates your location. Click bus to inspect.
+              </div>
+              <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 0.5rem; border-top: 1px solid var(--border-subtle); padding-top: 0.5rem;">
+                Prototype — GPS coordinates simulated.
+              </div>
+            </div>
+          </div>
+
+          <!-- Leaflet Map -->
+          <div id="tracking-map" class="leaflet-map-canvas" style="height: 520px;" aria-label="Live Kampala electric bus tracking map" role="application"></div>
+        </div>
+
+        <!-- Bus telemetry chips -->
+        <div class="bus-telemetry-bar" style="margin-top: 1.5rem;">
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem; font-weight: 600; text-transform: uppercase;">Select Bus to Track:</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
+            <div class="bus-telemetry-chip active" onclick="EbusMap.focusBus('BUS 04'); State.selectedTrackingBusId='BUS 04'; EbusMap.updateProximityHUD();" role="button" tabindex="0" aria-label="Track BUS 04">
+              <div class="bus-chip-dot green" aria-hidden="true"></div>
+              <div class="bus-chip-num">BUS 04</div>
+              <div class="bus-chip-route">Ntinda → CBD</div>
+            </div>
+            <div class="bus-telemetry-chip" onclick="EbusMap.focusBus('BUS 01'); State.selectedTrackingBusId='BUS 01'; EbusMap.updateProximityHUD();" role="button" tabindex="0" aria-label="Track BUS 01">
+              <div class="bus-chip-dot green" aria-hidden="true"></div>
+              <div class="bus-chip-num">BUS 01</div>
+              <div class="bus-chip-route">Ntinda → CBD</div>
+            </div>
+            <div class="bus-telemetry-chip" onclick="EbusMap.focusBus('BUS 02'); State.selectedTrackingBusId='BUS 02'; EbusMap.updateProximityHUD();" role="button" tabindex="0" aria-label="Track BUS 02">
+              <div class="bus-chip-dot yellow" aria-hidden="true"></div>
+              <div class="bus-chip-num">BUS 02</div>
+              <div class="bus-chip-route">Chanja → CBD</div>
+            </div>
+            <div class="bus-telemetry-chip" onclick="EbusMap.focusBus('BUS 07'); State.selectedTrackingBusId='BUS 07'; EbusMap.updateProximityHUD();" role="button" tabindex="0" aria-label="Track BUS 07">
+              <div class="bus-chip-dot green" aria-hidden="true"></div>
+              <div class="bus-chip-num">BUS 07</div>
+              <div class="bus-chip-route">Nakawa → Mukono</div>
+            </div>
+            <div class="bus-telemetry-chip" onclick="EbusMap.focusBus('BUS 09'); State.selectedTrackingBusId='BUS 09'; EbusMap.updateProximityHUD();" role="button" tabindex="0" aria-label="Track BUS 09">
+              <div class="bus-chip-dot red" aria-hidden="true"></div>
+              <div class="bus-chip-num">BUS 09</div>
+              <div class="bus-chip-route">Charging Hub</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 5: TIMETABLE (SECTION 14)
+         ====================================================================== -->
+    <section id="view-timetable" class="view-panel section" style="display: none;">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker">Schedules &amp; Frequencies</div>
+          <h2 class="section-title">E-Bus Timetable</h2>
+          <p class="section-desc">Select a route, day, and time period to view scheduled departures. <b>Demo data — Prototype only.</b></p>
+        </div>
+
+        <!-- Prototype Notice -->
+        <div style="display:flex; align-items:center; gap:0.65rem; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:var(--radius-md); padding:0.85rem 1rem; margin-bottom:1.5rem;" role="alert">
+          <span class="badge badge-warning" style="font-size:0.7rem;">PROTOTYPE</span>
+          <span style="font-size:0.82rem; color:var(--accent-gold);"><b>PROTOTYPE DATA:</b> Schedules are for demonstration purposes only. Not official timetable data.</span>
+        </div>
+
+        <!-- Timetable Filters -->
+        <div class="card card-glass" style="margin-bottom:1.5rem;">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:1rem;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="tt-route-select">Route</label>
+              <select id="tt-route-select" class="form-control" onchange="App.filterTimetable()" aria-label="Filter by route">
+                <option value="all">All Routes</option>
+                <option value="R-01">Line 01 — Ntinda → City Centre</option>
+                <option value="R-02">Line 02 — Chanja → City Centre</option>
+                <option value="R-03">Line 03 — Nakawa → Mukono</option>
+                <option value="R-04">Line 04 — Entebbe Express</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="tt-day-select">Day</label>
+              <select id="tt-day-select" class="form-control" onchange="App.filterTimetable()" aria-label="Filter by day">
+                <option value="weekday">Weekday (Mon–Fri)</option>
+                <option value="saturday">Saturday</option>
+                <option value="sunday">Sunday / Public Holiday</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="tt-period-select">Time Period</label>
+              <select id="tt-period-select" class="form-control" onchange="App.filterTimetable()" aria-label="Filter by time period">
+                <option value="all">All Day</option>
+                <option value="morning">Morning (05:00–12:00)</option>
+                <option value="afternoon">Afternoon (12:00–18:00)</option>
+                <option value="evening">Evening (18:00–23:30)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timetable Table -->
+        <div class="card card-glass">
+          <div style="overflow-x: auto;">
+            <table class="demand-heatmap-table" id="timetable-table" role="table" aria-label="E-Bus Timetable">
+              <thead>
+                <tr>
+                  <th scope="col">Period</th>
+                  <th scope="col">Departure</th>
+                  <th scope="col">Est. Arrival</th>
+                  <th scope="col">Stop / Corridor</th>
+                  <th scope="col">Bus</th>
+                  <th scope="col">Frequency</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Populated by App.renderTimetable() / App.filterTimetable() -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 6: JOURNEY PLANNER (SECTION 9)
+         ====================================================================== -->
+    <section id="view-planner" class="view-panel section" style="display: none;">
+      <div class="container container-narrow">
+        <div class="section-header">
+          <div class="section-kicker">Door-to-Door Navigation</div>
+          <h2 class="section-title">Green Journey Planner</h2>
+          <p class="section-desc">Find your step-by-step route from start to destination with walking and bus connections.</p>
+        </div>
+
+        <div class="card card-glass">
+          <form onsubmit="App.handleJourneyPlanner(event)">
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="planner-from-select">FROM: [Select Location / Stop]</label>
+                <select id="planner-from-select" class="form-control" required aria-label="Select your starting location"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="planner-to-select">TO: [Select Destination]</label>
+                <select id="planner-to-select" class="form-control" required aria-label="Select your destination"></select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;" aria-label="Plan my journey">
+              Plan Journey
+            </button>
+          </form>
+
+          <div id="planner-results" aria-live="polite"></div>
+        </div>
+
+        <!-- Journey Progress Graph CTA -->
+        <div style="margin-top:1rem; text-align:center;">
+          <button class="btn btn-outline" onclick="App.navigateTo('journey-graph')" aria-label="View journey progress graph">
+            View Journey Progress Graph
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 7: BOOK / REQUEST A RIDE (SECTION 21 — DEMO PAYMENT)
+         ====================================================================== -->
+    <section id="view-booking" class="view-panel section" style="display: none;">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker">Seat Reservation</div>
+          <h2 class="section-title">Book an Electric Bus Seat</h2>
+          <p class="section-desc">Select your seat, authorize via MTN MoMo / Airtel Money demo, and receive your digital QR pass.</p>
+        </div>
+
+        <!-- Section 21: Future Payment Notice -->
+        <div style="background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.3); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem;" role="note">
+          <div style="display:flex; align-items:center; gap:0.65rem; margin-bottom:0.5rem;">
+            <b style="color: #A78BFA; font-size:0.95rem;">Digital Fare &amp; Payments — Coming Soon</b>
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-secondary); line-height:1.5;">
+            Real payment integration will be added after: official authorization, payment-provider approval, API credentials, security review, and agreement with the transport operator.
+            Future methods: <b>MTN MoMo • Airtel Money • QR Code • NFC • Digital Wallet</b>.
+            <br>This is a <b>DEMO ONLY</b> — no real charges are made.
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.75rem; font-size:0.75rem;">
+            <span style="background:rgba(255,255,255,0.06); border:1px solid var(--border-subtle); border-radius:999px; padding:0.2rem 0.6rem;">Fare: UGX 2,000</span>
+            <span style="background:rgba(255,255,255,0.06); border:1px solid var(--border-subtle); border-radius:999px; padding:0.2rem 0.6rem;">Payment method: Demo Wallet</span>
+            <span style="background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); border-radius:999px; padding:0.2rem 0.6rem; color:#A78BFA;">Status: Prototype Only</span>
+          </div>
+        </div>
+
+        <div class="grid-2" style="align-items: start;">
+          <!-- Seat Diagram Card -->
+          <div class="card card-glass">
+            <h3 class="card-title" style="margin-bottom: 0.5rem;">
+              Kayoola EVS Interactive Seating (2+2 Layout)
+            </h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+              Click an open green seat to select. Row 1 is reserved for priority/special needs.
+            </p>
+
+            <div class="bus-seat-grid-container">
+              <div style="background: #1e293b; padding: 0.4rem; border-radius: 6px; text-align: center; font-size: 0.72rem; color: #94A3B8; margin-bottom: 1rem; font-weight:700; letter-spacing:0.05em;">
+                DRIVER CAB &amp; FRONT ENTRANCE
+              </div>
+
+              <div class="bus-seat-grid" id="bus-seats-container" role="list" aria-label="Bus seat selection">
+                <!-- Generated by Booking.renderSeatGrid() -->
+              </div>
+
+              <div class="seat-legend" role="note" aria-label="Seat legend">
+                <div class="seat-legend-item">
+                  <div class="legend-swatch" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle);"></div>
+                  <span>Available</span>
+                </div>
+                <div class="seat-legend-item">
+                  <div class="legend-swatch" style="background: var(--primary);"></div>
+                  <span>Selected</span>
+                </div>
+                <div class="seat-legend-item">
+                  <div class="legend-swatch" style="background: #1e293b;"></div>
+                  <span>Occupied</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Passenger & Payment Details -->
+          <div class="card card-glass">
+            <h3 class="card-title" style="margin-bottom: 1rem;">Passenger &amp; Route Details</h3>
+
+            <form onsubmit="Booking.handleBookingSubmit(event)">
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="book-origin-select">Boarding Stage</label>
+                  <select id="book-origin-select" class="form-control" onchange="Booking.updatePrice()" required aria-label="Select boarding stage"></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="book-dest-select">Destination Stage</label>
+                  <select id="book-dest-select" class="form-control" onchange="Booking.updatePrice()" required aria-label="Select destination stage"></select>
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="passenger-name">Passenger Full Name</label>
+                  <input type="text" id="passenger-name" class="form-control" placeholder="e.g. Kato Brian" value="Praise Mukasa" required autocomplete="name">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="passenger-phone">Mobile Phone (for SMS Pass)</label>
+                  <input type="tel" id="passenger-phone" class="form-control" placeholder="+256 700 000 000" value="+256 772 123456" required autocomplete="tel">
+                </div>
+              </div>
+
+              <!-- Payment Method Selection -->
+              <div class="form-group">
+                <label class="form-label">Select Demo Payment Method</label>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-top: 0.35rem;">
+                  <label style="background: var(--bg-surface-elevated); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 0.75rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="radio" name="pay-method" value="MTN Mobile Money" checked>
+                    <span style="font-weight: 700; color: #F59E0B;">MTN MoMo</span>
+                  </label>
+                  <label style="background: var(--bg-surface-elevated); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 0.75rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="radio" name="pay-method" value="Airtel Money">
+                    <span style="font-weight: 700; color: #EF4444;">Airtel Money</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Fare Breakdown -->
+              <div style="background: rgba(0,0,0,0.3); border-radius: var(--radius-md); padding: 1rem; margin: 1.5rem 0; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Selected Seat</div>
+                  <div style="font-size: 1.15rem; font-weight: 800; color: var(--primary);" id="selected-seat-display">None picked</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Total Fare (Demo)</div>
+                  <div style="font-size: 1.4rem; font-weight: 800; color: var(--text-main);" id="book-fare-display">UGX 3,000</div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%;" aria-label="Proceed to authorize demo payment">
+                Proceed to Authorize Demo Payment
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW: PAYMENTS & TRANSIT FARE HISTORY (TASK 5)
+         ====================================================================== -->
+    <section id="view-payments" class="view-panel section" style="display: none;">
+      <div class="container">
+        
+        <div class="section-header">
+          <div class="section-kicker">Fare Management &amp; Digital Receipts</div>
+          <h2 class="section-title">Payments &amp; Transactions</h2>
+          <p class="section-desc">
+            Review simulated Mobile Money payments, contactless card deductions, and digital transit receipts.
+            <span class="badge badge-warning" style="margin-left: 0.5rem;">Demo Environment</span>
+          </p>
+        </div>
+
+        <!-- Transparency Disclaimer -->
+        <div style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; color: var(--accent-gold); font-size: 0.95rem;">Prototype Demonstration Sandbox</div>
+            <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              No real bank or mobile financial transactions are processed. All reference IDs, amounts, and USSD prompts are simulated.
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="App.navigateTo('booking')" aria-label="Simulate a new booking">
+            Simulate New Booking
+          </button>
+        </div>
+
+        <!-- Summary KPI Cards -->
+        <div class="admin-metrics-grid" style="margin-bottom: 1.5rem;">
+          <div class="admin-metric-card">
+            <span class="popup-label">Total Simulated Spend</span>
+            <div class="num" style="color: var(--primary);" id="payments-total-spend">UGX 16,000</div>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Across 5 metropolitan trips</span>
+          </div>
+
+          <div class="admin-metric-card">
+            <span class="popup-label">Active Boarding Passes</span>
+            <div class="num" style="color: var(--accent-cyan);" id="payments-active-passes">2 Passes</div>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Valid for today's departures</span>
+          </div>
+
+          <div class="admin-metric-card">
+            <span class="popup-label">Preferred Method</span>
+            <div class="num" style="color: var(--accent-gold); font-size: 1.4rem; padding-top: 0.35rem;">MTN MoMo</div>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">USSD Push (*165#)</span>
+          </div>
+
+          <div class="admin-metric-card">
+            <span class="popup-label">Security &amp; Encryption</span>
+            <div class="num" style="color: #34D399; font-size: 1.4rem; padding-top: 0.35rem;">256-bit TLS</div>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Simulated tokenized payload</span>
+          </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="card card-glass" style="margin-bottom: 1.5rem;">
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+            <div style="flex: 2; min-width: 220px;">
+              <label class="form-label" for="payments-search-input">Search Payment History</label>
+              <input type="text" id="payments-search-input" class="form-control" 
+                placeholder="Search by reference ID, route, or stop..." 
+                oninput="App.filterPaymentsList()"
+                aria-label="Search payment records">
+            </div>
+
+            <div style="flex: 1; min-width: 160px;">
+              <label class="form-label" for="payments-status-filter">Status Filter</label>
+              <select id="payments-status-filter" class="form-control" onchange="App.filterPaymentsList()" aria-label="Filter by payment status">
+                <option value="all">All Statuses</option>
+                <option value="Completed">Completed</option>
+                <option value="Pending">Pending Authorization</option>
+                <option value="Refunded">Refunded</option>
+              </select>
+            </div>
+
+            <div style="flex: 1; min-width: 160px;">
+              <label class="form-label" for="payments-method-filter">Payment Method</label>
+              <select id="payments-method-filter" class="form-control" onchange="App.filterPaymentsList()" aria-label="Filter by payment method">
+                <option value="all">All Methods</option>
+                <option value="MTN Mobile Money">MTN Mobile Money</option>
+                <option value="Airtel Money">Airtel Money</option>
+                <option value="KaCyber Transit Card">Transit Smart Card</option>
+                <option value="Visa Card (Demo)">Visa / Mastercard</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Transactions Table -->
+        <div class="card card-glass" style="margin-bottom: 2rem;">
+          <div class="card-header">
+            <h3 class="card-title">Transaction Ledger</h3>
+            <span class="badge badge-electric" id="payments-count-badge">5 Records</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="demand-heatmap-table" id="payments-ledger-table">
+              <thead>
+                <tr>
+                  <th>Booking Reference</th>
+                  <th>Route &amp; Stage</th>
+                  <th>Date &amp; Time</th>
+                  <th>Method</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Receipt</th>
+                </tr>
+              </thead>
+              <tbody id="payments-table-body">
+                <!-- Populated by App.renderPayments() -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Payment Channels Reference Cards -->
+        <div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">Integrated &amp; Future Payment Channels</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
+            
+            <div class="card card-glass" style="padding: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                <h4 style="font-size: 1.05rem; color: #F59E0B;">MTN Mobile Money</h4>
+                <span class="badge badge-warning">Simulated Active</span>
+              </div>
+              <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+                Instant USSD prompt push (*165#) for Ugandan mobile numbers (+256 77X / 78X / 76X).
+              </p>
+            </div>
+
+            <div class="card card-glass" style="padding: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                <h4 style="font-size: 1.05rem; color: #EF4444;">Airtel Money</h4>
+                <span class="badge badge-danger">Simulated Active</span>
+              </div>
+              <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+                Airtel merchant push integration (*185#) for quick digital fare authorizations (+256 70X / 75X).
+              </p>
+            </div>
+
+            <div class="card card-glass" style="padding: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                <h4 style="font-size: 1.05rem; color: #38BDF8;">KaCyber Transit Smart Card</h4>
+                <span class="badge badge-info">Coming Soon</span>
+              </div>
+              <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+                Contactless NFC tap-to-ride cards for regular daily commuters across all Kampala corridors.
+              </p>
+            </div>
+
+            <div class="card card-glass" style="padding: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                <h4 style="font-size: 1.05rem; color: #A78BFA;">Visa &amp; Mastercard EMV</h4>
+                <span class="badge badge-info">Coming Soon</span>
+              </div>
+              <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+                Contactless card tap and Apple/Google Pay for express airport transit lines.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 8: PASSENGER WAITING SYSTEM — "WAIT" (SECTION 10)
+         ====================================================================== -->
+    <section id="view-waiting" class="view-panel section" style="display: none;">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker" style="background: var(--accent-gold-soft); color: var(--accent-gold); border-color: rgba(245, 158, 11, 0.3);">
+            Live Demand Signal
+          </div>
+          <h2 class="section-title">Passenger Waiting System ("WAIT")</h2>
+          <p class="section-desc">
+            Standing at a bus stop? Tell the system! Your signal alerts approaching electric bus drivers in real time so you are picked up smoothly.
+          </p>
+        </div>
+
+        <div id="waiting-system-container" aria-live="polite">
+          <!-- Populated by WaitSystem.renderWaitingView() -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 9: DRIVER PORTAL (SECTION 11)
+         ====================================================================== -->
+    <section id="view-driver" class="view-panel section" style="display: none;">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker">Driver Portal — Authorised Operators Only</div>
+          <h2 class="section-title">E-Bus Driver Interface</h2>
+          <p class="section-desc">
+            Simple, distraction-minimised in-cab tablet interface for Kampala electric bus operators.
+            Sign in with your Driver Badge ID.
+            <span style="color:rgba(245,158,11,0.85); font-size:0.8rem;">&ensp;Prototype demo only — no real vehicle systems connected.</span>
+          </p>
+        </div>
+
+        <div id="driver-portal-container" aria-live="polite">
+          <!-- Populated by DriverPortal.renderLoginGate() / renderMainInterface() -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 10: ADMIN DASHBOARD (SECTION 19)
+         ====================================================================== -->
+    <section id="view-admin" class="view-panel section" style="display: none;">
+      <div class="container">
+        <div id="admin-dashboard-container" aria-live="polite">
+          <!-- Populated by AdminDashboard.renderDashboard() -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 11: SERVICE ALERTS & NOTIFICATIONS (SECTION 16)
+         ====================================================================== -->
+    <section id="view-notifications" class="view-panel section" style="display: none;">
+      <div class="container container-narrow">
+        <div class="section-header">
+          <div class="section-kicker">Live Service Alerts</div>
+          <h2 class="section-title">Service Alerts &amp; Notifications</h2>
+          <p class="section-desc">Real-time transit advisories, bus status updates, and route disruptions. Colour-coded by urgency level.</p>
+        </div>
+
+        <!-- Alert Level Legend -->
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1.25rem;" role="note" aria-label="Alert level legend">
+          <span style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.78rem; padding:0.3rem 0.7rem; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); border-radius:999px; color:#38BDF8;">Information</span>
+          <span style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.78rem; padding:0.3rem 0.7rem; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:999px; color:#F59E0B;">Warning</span>
+          <span style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.78rem; padding:0.3rem 0.7rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:999px; color:#EF4444;">Urgent</span>
+        </div>
+
+        <div id="notifications-list-container" style="display: flex; flex-direction: column; gap: 1rem;" role="list" aria-live="polite">
+          <!-- Populated by App.renderNotificationsList() -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 12: HELP & SUPPORT
+         ====================================================================== -->
+    <section id="view-support" class="view-panel section" style="display: none;">
+      <div class="container container-narrow">
+        <div class="section-header">
+          <div class="section-kicker">Passenger Assistance</div>
+          <h2 class="section-title">Help &amp; Support Desk</h2>
+          <p class="section-desc">Frequently asked questions and emergency contact channels for Kampala commuters.</p>
+        </div>
+
+        <div class="card card-glass" style="margin-bottom: 2rem;">
+          <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">Frequently Asked Questions</h3>
+          
+          <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <div>
+              <h4 style="color: var(--primary); font-size: 1rem; margin-bottom: 0.35rem;">
+                How does the "WAIT" feature help me get a bus?
+              </h4>
+              <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+                When you signal that you are waiting at a specific stop, the approaching driver's in-cab tablet immediately shows how many commuters are waiting. This ensures drivers do not bypass your stage.
+              </p>
+            </div>
+            <div>
+              <h4 style="color: var(--primary); font-size: 1rem; margin-bottom: 0.35rem;">
+                Is the ETA shown on the app accurate?
+              </h4>
+              <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+                The ETA is a prototype estimate calculated using bus coordinates, stop distance, and estimated speed. Future versions will include real GPS data, traffic, and road conditions.
+              </p>
+            </div>
+            <div>
+              <h4 style="color: var(--primary); font-size: 1rem; margin-bottom: 0.35rem;">
+                What is the fare for an electric bus journey?
+              </h4>
+              <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+                Demo fares range from UGX 2,500 to UGX 5,000 depending on the route. These are prototype values only.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-glass">
+          <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">Emergency Contacts (Demo)</h3>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem;">
+            <div style="display:flex; gap:0.75rem; align-items:center;"><span class="badge badge-danger">EMERGENCY</span><span>999 / 112</span></div>
+            <div style="display:flex; gap:0.75rem; align-items:center;"><span class="badge badge-info">HELPLINE</span><span>+256 414 000 000</span></div>
+            <div style="display:flex; gap:0.75rem; align-items:center;"><span class="badge badge-warning">EMAIL</span><span>info@ebusconnect.ug</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 13: ABOUT
+         ====================================================================== -->
+    <section id="view-about" class="view-panel section" style="display: none;">
+      <div class="container container-narrow">
+        <div class="section-header">
+          <div class="section-kicker">About This Platform</div>
+          <h2 class="section-title">About E-Bus Connect Uganda</h2>
+        </div>
+        <div class="card card-glass">
+          <p style="line-height: 1.7; color: var(--text-secondary); margin-bottom: 1rem;">
+            E-Bus Connect Uganda is an academic software engineering prototype designed to demonstrate how a modern electric public transport platform could serve Kampala and Uganda's growing metropolitan areas.
+          </p>
+          <p style="line-height: 1.7; color: var(--text-secondary); margin-bottom: 1rem;">
+            Inspired by Uganda's Kiira Motors Kayoola EVS electric buses and the Kampala Metropolitan transport system, this prototype showcases the <b>KNOW → WAIT → TRACK → TRAVEL</b> passenger journey paradigm.
+          </p>
+          <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:var(--radius-md); padding:1rem; margin-top:1rem;" role="note">
+            <b style="color:var(--accent-gold);">Important Disclaimer</b>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.5rem; line-height:1.5;">
+              This is a student software engineering prototype. It is not officially connected to the Ugandan government, KCCA, Kiira Motors, or any real eBus system. All data is simulated. No real payments are processed.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 14: JOURNEY PROGRESS GRAPH (SECTION 17)
+         ====================================================================== -->
+    <section id="view-journey-graph" class="view-panel section" style="display: none;">
+      <div class="container container-narrow">
+        <div class="section-header">
+          <div class="section-kicker">Live Journey Progress</div>
+          <h2 class="section-title">Journey Progress Graph</h2>
+          <p class="section-desc">Visual journey progress showing your current position, completed stops, and remaining stops to destination.</p>
+        </div>
+        <div id="journey-graph-container" aria-live="polite">
+          <!-- Populated by App.renderJourneyGraph() -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 15: BUS RUSH MINI-GAME (SECTION 18)
+         ====================================================================== -->
+    <section id="view-bus-rush" class="view-panel section" style="display: none;">
+      <div class="container container-narrow">
+        <div class="section-header">
+          <div class="section-kicker">Optional Entertainment While Waiting</div>
+          <h2 class="section-title">Bus Rush — While You Wait</h2>
+          <p class="section-desc">
+            An optional mini-game to keep you entertained while waiting for your bus.
+            <b>The game automatically pauses when your bus is approaching or an urgent alert fires.</b>
+          </p>
+        </div>
+
+        <!-- Transit info always shown above game -->
+        <div id="bus-rush-transit-banner" style="margin-bottom:1.25rem; padding:0.85rem 1rem; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:var(--radius-md);" aria-live="polite">
+          <div style="font-size:0.8rem; color:var(--text-secondary);">
+            <b>Your bus status:</b> <span id="bus-rush-eta-display">BUS 04 — ETA ~8 minutes</span>
+          </div>
+        </div>
+
+        <div id="bus-rush-container" style="position:relative;">
+          <div style="text-align:center; padding:2rem 1rem;">
+            <button class="btn btn-primary btn-lg" onclick="BusRush.init('bus-rush-container'); App.updateBusRushEtaBanner();" id="start-busrush-btn" aria-label="Start Bus Rush game">
+              Start Bus Rush
+            </button>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.75rem;">
+              Collect energy tokens, avoid road barriers. Use arrow keys or swipe. Space = pause.
+            </p>
+          </div>
+        </div>
+
+        <div style="font-size:0.72rem; color:var(--text-dim); text-align:center; margin-top:0.75rem; padding:0.5rem 1rem; background:rgba(245,158,11,0.06); border-radius:0.5rem;" role="note">
+          Bus Rush is an optional entertainment feature only. It automatically pauses when your bus is nearby.
+          <b>Always check service alerts above for real transit information.</b>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 16: ETA CALCULATOR (SECTION 13)
+         ====================================================================== -->
+    <section id="view-eta" class="view-panel section" style="display: none;">
+      <div class="container container-narrow">
+        <div class="section-header">
+          <div class="section-kicker">Prototype ETA System</div>
+          <h2 class="section-title">Bus ETA Calculator</h2>
+          <p class="section-desc">
+            Estimated arrival times calculated using bus coordinates, stop coordinates, distance, and estimated speed.
+            <b>Prototype estimates only — not real-time GPS data.</b>
+          </p>
+        </div>
+        <div id="eta-panel-container" aria-live="polite">
+          <!-- Populated by EtaEngine.renderEtaPanel("eta-panel-container") -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       SECTION 27: COMPREHENSIVE SITE FOOTER
+       ========================================================================== -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-grid">
+        
+        <div class="footer-brand">
+          <h4>E-BUS <span style="color:var(--primary);">CONNECT</span> UGANDA</h4>
+          <p>
+            Smart Transport. Connected Journeys. An academic software engineering prototype designed around Uganda's transition to clean electric public transit.
+          </p>
+          <div style="margin-top: 1rem; font-size: 0.78rem; color: var(--accent-gold); line-height: 1.5;">
+            <b>Prototype Notice:</b> Academic student project. Not officially connected to the Ugandan Government, KCCA, or commercial eBus operators.
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h5>Passenger Services</h5>
+          <ul class="footer-links">
+            <li><a href="#find-bus" onclick="App.navigateTo('find-bus')">Find a Bus</a></li>
+            <li><a href="#tracking" onclick="App.navigateTo('tracking')">Live Bus Tracking</a></li>
+            <li><a href="#waiting" onclick="App.navigateTo('waiting')">I'm Waiting</a></li>
+            <li><a href="#booking" onclick="App.navigateTo('booking')">Book &amp; MoMo QR Pass</a></li>
+            <li><a href="#payments" onclick="App.navigateTo('payments')">Payments &amp; Ledger</a></li>
+            <li><a href="#timetable" onclick="App.navigateTo('timetable')">Official Timetable</a></li>
+            <li><a href="#planner" onclick="App.navigateTo('planner')">Journey Planner</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Operations &amp; Tools</h5>
+          <ul class="footer-links">
+            <li><a href="#driver" onclick="App.navigateTo('driver')">Driver Cockpit</a></li>
+            <li><a href="#admin" onclick="App.navigateTo('admin')">Admin Telematics</a></li>
+            <li><a href="#journey-graph" onclick="App.navigateTo('journey-graph')">Journey Progress</a></li>
+            <li><a href="#eta" onclick="App.navigateTo('eta')">ETA Calculator</a></li>
+            <li><a href="#bus-rush" onclick="App.navigateTo('bus-rush')">Bus Rush Game</a></li>
+            <li><a href="#notifications" onclick="App.navigateTo('notifications')">Service Alerts</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Project &amp; Standards</h5>
+          <ul class="footer-links">
+            <li><a href="#about" onclick="App.navigateTo('about')">About the Prototype</a></li>
+            <li><a href="#support" onclick="App.navigateTo('support')">Help &amp; Support</a></li>
+            <li><a href="javascript:void(0)" onclick="RoleAccess.showRoleModal()">Switch Demo Role</a></li>
+            <li><a href="javascript:void(0)" onclick="App.showToast('Accessibility Active', 'WCAG 2.1 AA compliant colors, large touch targets & screen reader navigation enabled.', 'info')">Universal Accessibility</a></li>
+            <li><a href="manifest.json" target="_blank">PWA Manifest (v1.0)</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          &copy; 2026 <b>E-Bus Connect Uganda</b> — Student Software Engineering Prototype (KNOW → WAIT → TRACK → TRAVEL).
+        </div>
+        <div>
+          Built with HTML5 • Vanilla CSS • JavaScript • Leaflet Maps • PWA Offline Cache
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bottom Navigation Dock (Mobile — Section 25) -->
+  <nav class="bottom-dock" aria-label="Quick navigation dock">
+    <button class="dock-btn active" data-target="home" aria-label="Home">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span>Home</span>
+    </button>
+    <button class="dock-btn" data-target="find-bus" aria-label="Find Bus">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <span>Find Bus</span>
+    </button>
+    <button class="dock-btn" data-target="waiting" aria-label="I am waiting" style="color: var(--accent-gold);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+      <span>Waiting</span>
+    </button>
+    <button class="dock-btn" data-target="tracking" aria-label="Live tracking map">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+      <span>Track</span>
+    </button>
+    <button class="dock-btn" data-target="payments" aria-label="Payments history">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+      <span>Payments</span>
+    </button>
+  </nav>
+
+  <!-- ==========================================================================
+       MODAL: MTN/AIRTEL MOMO AUTHORIZATION SIMULATOR (Section 21)
+       ========================================================================== -->
+  <div class="modal-overlay" id="momo-modal" role="dialog" aria-modal="true" aria-labelledby="momo-modal-method">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <div style="font-weight: 800; font-size: 1.15rem; color: var(--accent-gold);" id="momo-modal-method">
+          MTN Mobile Money
+        </div>
+        <button class="modal-close-btn" onclick="Booking.closePaymentModal()" aria-label="Close payment dialog">✕</button>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div style="width: 54px; height: 54px; border-radius: 50%; background: var(--accent-gold-soft); color: var(--accent-gold); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; font-weight: 800; font-size: 1rem; letter-spacing: 0.05em;" aria-hidden="true">
+          USSD
+        </div>
+        <h4 style="font-size: 1.1rem; margin-bottom: 0.25rem;">Demo Payment Authorization</h4>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">
+          Simulating USSD push to <b id="momo-modal-phone" style="color:var(--text-main);">+256 7XX XXX</b>
+        </p>
+      </div>
+
+      <div style="background: var(--bg-surface-elevated); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 0.5rem;">
+          <span style="color: var(--text-muted);">Merchant:</span>
+          <b>E-BUS CONNECT UGANDA</b>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.88rem;">
+          <span style="color: var(--text-muted);">Amount:</span>
+          <b id="momo-modal-amount" style="color: var(--primary); font-size: 1.1rem;">UGX 3,000</b>
+        </div>
+        <div style="margin-top: 0.5rem; font-size: 0.72rem; color: var(--text-dim);">
+          PROTOTYPE ONLY — No real charge is made.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="momo-pin-input">Enter 4-Digit Demo PIN</label>
+        <input type="password" id="momo-pin-input" class="form-control" maxlength="4" placeholder="• • • •" style="letter-spacing: 0.5em; text-align: center; font-size: 1.4rem;" aria-label="Demo PIN - any 4 digits">
+        <span style="font-size: 0.72rem; color: var(--text-dim); text-align: center; margin-top: 0.35rem; display:block;">
+          Demo simulation only. Any 4 numbers will authorize.
+        </span>
+      </div>
+
+      <button id="confirm-pay-btn" class="btn btn-accent" style="width: 100%; margin-top: 1rem;" onclick="Booking.confirmPaymentSimulation()" aria-label="Authorize demo payment">
+        Authorize Demo Payment
+      </button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL: CONFIRMED QR BOARDING PASS
+       ========================================================================== -->
+  <div class="modal-overlay" id="ticket-modal" role="dialog" aria-modal="true" aria-label="Boarding pass">
+    <div class="modal-content" style="max-width: 480px; padding: 1.5rem;">
+      <div id="ticket-modal-content">
+        <!-- Generated by Booking.displayBoardingPass() -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       TOAST ALERTS CONTAINER
+       ========================================================================== -->
+  <div class="toast-container" id="toast-container" role="status" aria-live="polite"></div>
+
+  <!-- ==========================================================================
+       SCRIPTS — Load order matters
+       ========================================================================== -->
+  <!-- Leaflet JS for interactive map -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- E-Bus Application Modules (dependency order) -->
+  <script src="js/data.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/roleAccess.js"></script>
+  <script src="js/eta.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/waitSystem.js"></script>
+  <script src="js/booking.js"></script>
+  <script src="js/driverPortal.js"></script>
+  <script src="js/adminDashboard.js"></script>
+  <script src="js/busRush.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

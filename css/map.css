@@ -1,0 +1,357 @@
+/* ==========================================================================
+   E-BUS CONNECT UGANDA - MAP & TELEMETRY STYLES
+   Leaflet custom dark/light tiles, bus markers, stop pins, radar animations
+   ========================================================================== */
+
+.map-container-wrapper {
+  position: relative;
+  width: 100%;
+  height: 650px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--border-medium);
+  box-shadow: var(--shadow-lg);
+  background: #0B1327;
+}
+
+#tracking-map, #admin-fleet-map {
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+/* Custom Map Overlay Bar */
+.map-floating-overlay {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 360px;
+  width: calc(100% - 2rem);
+}
+
+.map-glass-card {
+  background: rgba(14, 23, 46, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  box-shadow: var(--shadow-md);
+  color: var(--text-main);
+}
+
+.map-search-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem 0.5rem 2.2rem;
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+.map-floating-controls {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.map-tool-btn {
+  background: rgba(14, 23, 46, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-main);
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.map-tool-btn:hover {
+  background: var(--primary);
+  color: #062b1e;
+  border-color: var(--primary);
+}
+
+/* Bottom Telemetry Drawer on Tracking Page */
+.map-bottom-telemetry {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  z-index: 500;
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.bus-telemetry-chip {
+  flex-shrink: 0;
+  background: rgba(14, 23, 46, 0.92);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--text-main);
+}
+
+.bus-telemetry-chip:hover, .bus-telemetry-chip.active {
+  border-color: var(--primary);
+  background: rgba(14, 23, 46, 0.98);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+.bus-chip-num {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--primary);
+}
+
+.bus-chip-route {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.bus-chip-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Custom Marker Styles */
+.custom-bus-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform 0.5s ease;
+}
+
+.bus-marker-pin {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #10B981;
+  color: #062b1e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.6), 0 2px 6px rgba(0,0,0,0.4);
+  border: 2.5px solid #ffffff;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.bus-marker-pin.pulse {
+  animation: pulse-ring 2s infinite;
+}
+
+.bus-marker-pin svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.bus-marker-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #0B132B;
+  color: #10B981;
+  border: 1.5px solid #10B981;
+  font-size: 0.62rem;
+  font-weight: 800;
+  border-radius: var(--radius-full);
+  padding: 0.1rem 0.35rem;
+  white-space: nowrap;
+}
+
+.bus-marker-battery {
+  position: absolute;
+  bottom: -6px;
+  background: #0F172A;
+  color: #38BDF8;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+/* Bus Stop Custom Marker */
+.custom-stop-marker {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #3B82F6;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.custom-stop-marker.has-waiting {
+  background: #F59E0B;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+  animation: waiting-pulse 1.8s infinite;
+}
+
+@keyframes waiting-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+/* Leaflet Popup Reskin */
+.leaflet-popup-content-wrapper {
+  background: #0E172E !important;
+  color: #F8FAFC !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-popup-tip {
+  background: #0E172E !important;
+}
+
+.popup-custom-card {
+  padding: 1rem 1.25rem;
+}
+
+.popup-custom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.popup-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #10B981;
+}
+
+.popup-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.85rem;
+}
+
+.popup-metric-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.popup-label {
+  color: #94A3B8;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.popup-val {
+  font-weight: 700;
+  color: #F8FAFC;
+}
+
+/* Radar pulse animation for Passenger Waiting Signal */
+.radar-pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-gold);
+  opacity: 0.8;
+  animation: radar-expand 2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes radar-expand {
+  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
+
+/* Passenger Location Custom Pin */
+.passenger-loc-pin {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #0284C7;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(2, 132, 199, 0.7);
+  border: 2.5px solid #ffffff;
+  position: relative;
+  font-size: 1.1rem;
+}
+
+.passenger-loc-pulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: #38BDF8;
+  opacity: 0.6;
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+/* Proximity Distance Banner */
+.proximity-distance-banner {
+  background: rgba(14, 23, 46, 0.95);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem 1.25rem;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .map-container-wrapper {
+    height: 480px;
+  }
+  .map-floating-overlay {
+    max-width: 100%;
+  }
+}

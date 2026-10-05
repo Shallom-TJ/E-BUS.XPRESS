@@ -1,0 +1,19 @@
+{
+  "name": "E-Bus Connect Uganda",
+  "short_name": "E-Bus UG",
+  "description": "Smart electric public transport platform for Uganda. Know, Wait, Track, and Travel.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0B132B",
+  "theme_color": "#10B981",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./assets/images/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["transportation", "travel", "utilities"]
+}
