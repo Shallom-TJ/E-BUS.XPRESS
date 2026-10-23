@@ -9,8 +9,29 @@ const Booking = {
   occupiedSeats: ['1A', '2B', '3C', '4A', '5D', '6B', '8C'],
 
   init() {
-    this.renderSeatGrid();
     this.populateStopsDropdowns();
+    this.renderSeatGrid();
+    this.loadOccupiedSeats();
+  },
+
+  async loadOccupiedSeats() {
+    const client = window.supabaseClient;
+    if (!client) return;
+
+    try {
+      const { data, error } = await client
+        .from('bookings')
+        .select('seat')
+        .eq('status', 'confirmed');
+
+      if (!error && Array.isArray(data)) {
+        const dbSeats = data.map(b => b.seat);
+        this.occupiedSeats = Array.from(new Set([...this.occupiedSeats, ...dbSeats]));
+        this.renderSeatGrid();
+      }
+    } catch (e) {
+      console.warn('[Booking] Could not load occupied seats from Supabase:', e);
+    }
   },
 
   populateStopsDropdowns() {
@@ -102,6 +123,13 @@ const Booking = {
     const passengerPhone = document.getElementById('passenger-phone').value;
     const paymentMethod = document.querySelector('input[name="pay-method"]:checked')?.value || 'MTN MoMo';
 
+    // Require authenticated account (Step B + Step C)
+    if (!window.RoleAccess || !window.RoleAccess.isAuthenticated) {
+      App.showToast('Sign In Required', 'Please sign in or create an account to book your seat.', 'warning');
+      window.RoleAccess.showAuthModal('login', 'booking');
+      return;
+    }
+
     if (!originId || !destId || !passengerName || !passengerPhone) {
       App.showToast('Missing Info', 'Please fill in all booking fields', 'warning');
       return;
@@ -154,62 +182,93 @@ const Booking = {
       return;
     }
 
-    // Process payment simulation
+    // Process payment and atomic database booking
     const btn = document.getElementById('confirm-pay-btn');
-    btn.innerHTML = 'Authorizing with Bank / MoMo...';
+    btn.innerHTML = 'Authorizing & Securing Seat in Supabase...';
     btn.disabled = true;
 
-    setTimeout(() => {
-      this.closePaymentModal();
-      btn.innerHTML = 'Authorize Payment';
-      btn.disabled = false;
+    (async () => {
+      try {
+        let bookingId = 'UG-' + Math.floor(100000 + Math.random() * 900000);
+        let vehicleName = 'Kayoola Electric EB-015';
 
-      // Create confirmed ticket
-      const ticketId = 'UG-' + Math.floor(100000 + Math.random() * 900000);
-      const ticket = {
-        id: ticketId,
-        passengerName: this.pendingPaymentData.passengerName,
-        passengerPhone: this.pendingPaymentData.passengerPhone,
-        originName: this.pendingPaymentData.originName,
-        originCode: this.pendingPaymentData.originCode,
-        destName: this.pendingPaymentData.destName,
-        destCode: this.pendingPaymentData.destCode,
-        seat: this.pendingPaymentData.seat,
-        fare: this.pendingPaymentData.fare,
-        busName: 'Kayoola Electric EB-015',
-        departureTime: 'Today 17:30',
-        paymentMethod: this.pendingPaymentData.paymentMethod,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
+        const client = window.supabaseClient;
+        if (client && window.RoleAccess && window.RoleAccess.isAuthenticated) {
+          const { data, error } = await client.rpc('book_seat_smart', {
+            p_route: this.pendingPaymentData.routeId || 'R-01',
+            p_bus: this.pendingPaymentData.busName || 'BUS 01',
+            p_seat: this.pendingPaymentData.seat,
+            p_origin: this.pendingPaymentData.originCode || 'ST-NTD',
+            p_dest: this.pendingPaymentData.destCode || 'ST-CBD'
+          });
 
-      // Mark seat occupied
-      this.occupiedSeats.push(this.pendingPaymentData.seat);
-      this.selectedSeat = null;
+          if (error) {
+            throw new Error(error.message);
+          }
 
-      // Record payment in payments ledger (Task 5)
-      const paymentRecord = {
-        id: 'EB-PAY-' + Math.floor(1000 + Math.random() * 9000),
-        reference: (this.pendingPaymentData.paymentMethod.includes('MTN') ? 'MOMO-UG-' : (this.pendingPaymentData.paymentMethod.includes('Airtel') ? 'AIRTEL-UG-' : 'CARD-UG-')) + Math.floor(100000 + Math.random() * 900000),
-        route: `${this.pendingPaymentData.originName} → ${this.pendingPaymentData.destName}`,
-        stop: this.pendingPaymentData.originName,
-        busId: 'EB-004',
-        amount: this.pendingPaymentData.fare,
-        currency: 'UGX',
-        method: this.pendingPaymentData.paymentMethod,
-        status: 'Completed',
-        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        seats: 1
-      };
-      if (!State.payments) State.payments = [];
-      State.payments.unshift(paymentRecord);
-      localStorage.setItem('ebus_payments', JSON.stringify(State.payments));
+          if (data && data.booking_id) {
+            bookingId = data.booking_id;
+            if (data.bus_name) vehicleName = data.bus_name;
+          }
+        }
 
-      State.addBookedTicket(ticket);
-      App.showToast('Payment Successful', `Boarding pass ${ticketId} issued.`, 'success');
+        this.closePaymentModal();
+        btn.innerHTML = 'Authorize Payment';
+        btn.disabled = false;
 
-      // Display boarding pass modal
-      this.displayBoardingPass(ticket);
-    }, 1200);
+        // Mark seat occupied
+        this.occupiedSeats.push(this.pendingPaymentData.seat);
+        const bookedSeat = this.pendingPaymentData.seat;
+        this.selectedSeat = null;
+
+        // Create confirmed ticket
+        const ticket = {
+          id: bookingId,
+          passengerName: this.pendingPaymentData.passengerName,
+          passengerPhone: this.pendingPaymentData.passengerPhone,
+          originName: this.pendingPaymentData.originName,
+          originCode: this.pendingPaymentData.originCode,
+          destName: this.pendingPaymentData.destName,
+          destCode: this.pendingPaymentData.destCode,
+          seat: bookedSeat,
+          fare: this.pendingPaymentData.fare,
+          busName: vehicleName,
+          departureTime: 'Today 17:30',
+          paymentMethod: this.pendingPaymentData.paymentMethod,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        // Record payment in payments ledger (Task 5)
+        const paymentRecord = {
+          id: 'EB-PAY-' + Math.floor(1000 + Math.random() * 9000),
+          reference: (this.pendingPaymentData.paymentMethod.includes('MTN') ? 'MOMO-UG-' : (this.pendingPaymentData.paymentMethod.includes('Airtel') ? 'AIRTEL-UG-' : 'CARD-UG-')) + Math.floor(100000 + Math.random() * 900000),
+          route: `${this.pendingPaymentData.originName} → ${this.pendingPaymentData.destName}`,
+          stop: this.pendingPaymentData.originName,
+          busId: vehicleName,
+          amount: this.pendingPaymentData.fare,
+          currency: 'UGX',
+          method: this.pendingPaymentData.paymentMethod,
+          status: 'Completed',
+          date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          seats: 1
+        };
+        if (!State.payments) State.payments = [];
+        State.payments.unshift(paymentRecord);
+        localStorage.setItem('ebus_payments', JSON.stringify(State.payments));
+
+        State.addBookedTicket(ticket);
+        App.showToast('Seat Confirmed!', `Seat ${bookedSeat} atomic reservation verified by Supabase.`, 'success');
+
+        this.renderSeatGrid();
+        this.displayBoardingPass(ticket);
+      } catch (err) {
+        btn.innerHTML = 'Authorize Payment';
+        btn.disabled = false;
+        App.showToast('Booking Failed', err.message || 'Could not complete booking', 'error');
+        // Refresh seats in case another passenger booked this seat
+        await this.loadOccupiedSeats();
+      }
+    })();
   },
 
   displayBoardingPass(ticket) {

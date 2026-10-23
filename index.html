@@ -83,9 +83,9 @@
           Install App
         </button>
 
-        <!-- Role Switcher (Prototype Demo) -->
-        <button class="btn btn-outline btn-sm" onclick="RoleAccess.showRoleModal()" aria-label="Switch demo role (Prototype)" title="Switch Role (Prototype Demo)" style="font-size:0.78rem;">
-          Role
+        <!-- Auth / Role Account Button -->
+        <button id="auth-status-btn" class="btn btn-outline btn-sm" onclick="RoleAccess.handleAuthBtnClick()" aria-label="Account and Authentication" title="Sign In / Account" style="font-size:0.78rem;">
+          Sign In
         </button>
 
         <!-- Theme Toggle Button -->
@@ -153,8 +153,8 @@
       <li><a href="#support" class="nav-link" data-target="support">Help &amp; Support</a></li>
       <li><a href="#about" class="nav-link" data-target="about">About E-Bus Connect</a></li>
       <li style="border-top:1px solid var(--border-subtle); margin-top:0.75rem; padding-top:0.75rem;">
-        <button class="btn btn-outline btn-sm" style="width:100%;" onclick="RoleAccess.showRoleModal(); App.closeMobileDrawer();" aria-label="Switch user role (prototype demo)">
-          Switch Role (Demo)
+        <button id="mobile-auth-status-btn" class="btn btn-outline btn-sm" style="width:100%;" onclick="RoleAccess.handleAuthBtnClick(); App.closeMobileDrawer();" aria-label="Account and Authentication">
+          Sign In / Create Account
         </button>
       </li>
     </ul>
@@ -1538,7 +1538,7 @@
           <ul class="footer-links">
             <li><a href="#about" onclick="App.navigateTo('about')">About the Prototype</a></li>
             <li><a href="#support" onclick="App.navigateTo('support')">Help &amp; Support</a></li>
-            <li><a href="javascript:void(0)" onclick="RoleAccess.showRoleModal()">Switch Demo Role</a></li>
+            <li><a href="javascript:void(0)" onclick="RoleAccess.handleAuthBtnClick()">Account &amp; Security</a></li>
             <li><a href="javascript:void(0)" onclick="App.showToast('Accessibility Active', 'WCAG 2.1 AA compliant colors, large touch targets & screen reader navigation enabled.', 'info')">Universal Accessibility</a></li>
             <li><a href="manifest.json" target="_blank">PWA Manifest (v1.0)</a></li>
           </ul>
@@ -1650,6 +1650,10 @@
   <!-- ==========================================================================
        SCRIPTS — Load order matters
        ========================================================================== -->
+  <!-- Supabase JS Client Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
+
   <!-- Leaflet JS for interactive map -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   

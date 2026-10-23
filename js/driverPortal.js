@@ -23,12 +23,22 @@ const DriverPortal = {
   },
 
   renderCockpit() {
-    // Called from App.navigateTo('driver') — ensure login gate first
-    if (!this.loginVerified) {
-      this.renderLoginGate();
+    // Called from App.navigateTo('driver') — verify authenticated driver role
+    if (RoleAccess && RoleAccess.isAuthenticated && (RoleAccess.currentRole === 'driver' || RoleAccess.currentRole === 'admin')) {
+      this.loginVerified = true;
+      if (RoleAccess.currentUser?.badgeId) {
+        const matched = State.fleet.find(b => b.driverBadge === RoleAccess.currentUser.badgeId);
+        if (matched) {
+          this.currentBus = matched;
+          State.driverModeBusId = matched.id;
+        }
+      }
+      this.renderMainInterface();
       return;
     }
-    this.renderMainInterface();
+
+    this.loginVerified = false;
+    this.renderLoginGate();
   },
 
   // -----------------------------------------------------------------------
@@ -38,11 +48,14 @@ const DriverPortal = {
     const container = document.getElementById('driver-portal-container');
     if (!container) return;
 
-    // If already verified this session, go straight to interface
-    if (this.loginVerified) {
+    if (RoleAccess && RoleAccess.isAuthenticated && (RoleAccess.currentRole === 'driver' || RoleAccess.currentRole === 'admin')) {
+      this.loginVerified = true;
       this.renderMainInterface();
       return;
     }
+
+    const isPassenger = RoleAccess && RoleAccess.isAuthenticated && RoleAccess.currentRole === 'passenger';
+    const userName = RoleAccess?.currentUser?.fullName || '';
 
     container.innerHTML = `
       <div style="max-width: 480px; margin: 3rem auto;">
@@ -55,31 +68,35 @@ const DriverPortal = {
 
           <h2 style="font-size: 1.6rem; margin-bottom: 0.35rem;">Driver Portal</h2>
           <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 2rem;">
-            Authorised bus operators only. Enter your Driver Badge ID to continue.
+            Authorised electric bus operators only. In-cab telematics and passenger waiting terminal.
           </p>
 
-          <!-- Badge PIN field -->
-          <div class="form-group" style="text-align:left;">
-            <label class="form-label" for="driver-badge-input">Driver Badge ID</label>
-            <input type="text" id="driver-badge-input" class="form-control"
-              placeholder="e.g. UG-DRV-042"
-              value="UG-DRV-042"
-              style="font-size: 1.1rem; text-align: center; letter-spacing: 0.05em;"
-              aria-label="Driver Badge ID">
-            <span style="font-size: 0.72rem; color: var(--text-dim); display:block; margin-top:0.3rem;">
-              Demo: Use any ID starting with UG-DRV- or type the default value above.
-            </span>
-          </div>
+          ${isPassenger ? `
+            <div style="padding: 1rem; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: var(--radius-md); margin-bottom: 1.5rem; text-align: left;">
+              <div style="font-weight: 700; color: #EF4444; margin-bottom: 0.35rem;">Driver Role Required</div>
+              <div style="font-size: 0.82rem; color: var(--text-muted);">
+                You are currently signed in as <strong>${userName}</strong> (Passenger). Only accounts assigned the <strong>Driver</strong> or <strong>Admin</strong> role in Supabase can operate this cockpit.
+              </div>
+            </div>
+            <button class="btn btn-outline" style="width:100%; margin-bottom:0.75rem;" onclick="RoleAccess.showAccountModal()">
+              Switch / Sign Out
+            </button>
+          ` : `
+            <div style="padding: 1rem; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: var(--radius-md); margin-bottom: 1.5rem; text-align: left;">
+              <div style="font-size: 0.82rem; color: var(--text-muted);">
+                Drivers sign in using their registered operational email and secure password. Access permissions are verified directly against the Supabase database.
+              </div>
+            </div>
+            <button class="btn btn-primary" style="width:100%; font-size:1.05rem; padding: 0.85rem;"
+              onclick="RoleAccess.showAuthModal('login', 'driver')"
+              id="driver-login-btn">
+              Sign In as Driver
+            </button>
+          `}
 
-          <button class="btn btn-primary" style="width:100%; margin-top:1rem; font-size:1.1rem; padding: 0.85rem;"
-            onclick="DriverPortal.attemptLogin()"
-            id="driver-login-btn">
-            Sign In as Driver
-          </button>
-
-          <div style="margin-top: 1.25rem; padding: 0.85rem; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: var(--radius-md);">
+          <div style="margin-top: 1.25rem; padding: 0.75rem; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: var(--radius-md);">
             <span style="font-size: 0.77rem; color: var(--accent-gold);">
-              Prototype Demo — This is a demonstration portal. No real vehicle systems are connected.
+              Security Notice: Client-side badge bypasses are disabled. Roles are enforced via Row Level Security.
             </span>
           </div>
         </div>
@@ -88,21 +105,7 @@ const DriverPortal = {
   },
 
   attemptLogin() {
-    const badgeEl = document.getElementById('driver-badge-input');
-    const badge = (badgeEl?.value || '').trim().toUpperCase();
-    if (!badge || (!badge.startsWith('UG-DRV-') && !badge.startsWith('DEP-'))) {
-      App.showToast('Invalid Badge', 'Please enter a valid Driver Badge ID (e.g. UG-DRV-042)', 'error');
-      return;
-    }
-    // Find matching driver in fleet (prototype: any UG-DRV badge works)
-    const matchedBus = State.fleet.find(b => b.driverBadge === badge) || this.currentBus;
-    if (matchedBus) {
-      this.currentBus = matchedBus;
-      State.driverModeBusId = matchedBus.id;
-    }
-    this.loginVerified = true;
-    App.showToast('Driver Verified', `Welcome ${this.currentBus.driverName}! Bus ${this.currentBus.id} loaded.`, 'success');
-    this.renderMainInterface();
+    RoleAccess.showAuthModal('login', 'driver');
   },
 
   // -----------------------------------------------------------------------

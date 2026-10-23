@@ -27,6 +27,9 @@ const App = {
 
   init() {
     State.init();
+    if (window.RoleAccess && typeof window.RoleAccess.init === 'function') {
+      window.RoleAccess.init();
+    }
     this.setupNavigation();
     this.setupPWA();
     this.setupToasts();
@@ -65,6 +68,13 @@ const App = {
 
   navigateTo(viewId, updateHash = true) {
     if (!this.views.includes(viewId)) return;
+
+    // Server-verified permission guard
+    if (window.RoleAccess && typeof window.RoleAccess.guardView === 'function') {
+      if (!window.RoleAccess.guardView(viewId)) {
+        return;
+      }
+    }
 
     // Toggle active view sections
     this.views.forEach(v => {

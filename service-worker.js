@@ -8,6 +8,8 @@ const ASSETS_TO_CACHE = [
   './css/components.css',
   './css/map.css',
   './css/views.css',
+  './js/supabaseClient.js',
+  './js/roleAccess.js',
   './js/data.js',
   './js/state.js',
   './js/map.js',

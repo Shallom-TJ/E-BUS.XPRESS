@@ -29,6 +29,33 @@ const AdminDashboard = {
     const container = document.getElementById('admin-dashboard-container');
     if (!container) return;
 
+    // Defense-in-depth: verify authenticated admin role
+    if (!RoleAccess || !RoleAccess.isAuthenticated || RoleAccess.currentRole !== 'admin') {
+      container.innerHTML = `
+        <div style="max-width: 480px; margin: 4rem auto; text-align: center;">
+          <div class="card card-glass" style="padding: 2.5rem 2rem;">
+            <div style="width:72px; height:72px; border-radius:50%; background: rgba(239,68,68,0.15); border: 2px solid #EF4444; display:flex; align-items:center; justify-content:center; margin: 0 auto 1.25rem auto; color:#EF4444;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Admin Access Restricted</h2>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.75rem;">
+              The Fleet Operations Console requires verified Administrator credentials. This section is protected by PostgreSQL Row Level Security.
+            </p>
+            <button class="btn btn-primary" onclick="RoleAccess.showAuthModal('login', 'admin')" style="width:100%; margin-bottom:0.75rem;">
+              Sign In as Administrator
+            </button>
+            <button class="btn btn-outline" onclick="App.navigateTo('home')" style="width:100%;">
+              Back to Home
+            </button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
     const inServiceCount = State.fleet.filter(b => b.status === 'in-service').length;
     const chargingCount = State.fleet.filter(b => b.status === 'charging').length;
     const totalWaiting = State.stops.reduce((sum, s) => sum + s.waitingPassengers, 0);
